@@ -12,8 +12,8 @@ const ORIGINADOR_RETORNO = "Vem Benefícios"; // única origem cruzada com o BPO
 
 /* ---------------- Supabase ---------------- */
 
-const SUPABASE_URL = "https://xobtvoganslqhwledysq.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhvYnR2b2dhbnNscWh3bGVkeXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1OTUyMjEsImV4cCI6MjA5NzE3MTIyMX0.E0kES6d1-jr3yxWFC4ZsE8MQ7ttOR5dOHovJiZtjXkA";
+const SUPABASE_URL = "https://omwfowrgvlnjeirdjedm.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9td2Zvd3JndmxuamVpcmRqZWRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ2NTkxNDAsImV4cCI6MjEwMDIzNTE0MH0.U406AsWAqN-Uqgaf5NiTuovig6d89OQHEr6uuzaI4Jw";
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 async function sbSave(key, value) {

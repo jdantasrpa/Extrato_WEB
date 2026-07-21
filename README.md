@@ -2,7 +2,7 @@
 
 Aplicação web de página única (SPA) para **conciliação entre o extrato bancário e o arquivo de retorno do BPO**, por convênio e competência. Roda 100% no navegador, sem backend próprio: os arquivos são lidos localmente, os dados ficam no `localStorage` e são sincronizados entre usuários via Supabase.
 
-Repositório: <https://github.com/AlvoCard-dev/conciliacao>
+Repositório: <https://github.com/jdantasrpa/Extrato_WEB>
 
 ---
 
@@ -11,6 +11,7 @@ Repositório: <https://github.com/AlvoCard-dev/conciliacao>
 - [Visão geral](#visão-geral)
 - [Stack](#stack)
 - [Estrutura do projeto](#estrutura-do-projeto)
+- [Como o app.js funciona](#como-o-appjs-funciona)
 - [Como executar](#como-executar)
 - [Autenticação e perfis](#autenticação-e-perfis)
 - [Arquivos de entrada](#arquivos-de-entrada)
@@ -58,6 +59,142 @@ Extrato_WEB/
 ```
 
 O `app.js` é organizado em blocos comentados: `Supabase`, `Helpers`, `Navigation`, `Toasts & Loading`, `Extrato (xlsx)`, `Retorno (csv)`, `Render: <página>`, `Charts`, `Conciliação`, `Setup`, `Export` e `Auth`. A inicialização acontece no `DOMContentLoaded` ao final do arquivo.
+
+## Como o app.js funciona
+
+Sem framework, sem build, sem módulos: um único arquivo de ~1.680 linhas carregado por `<script>` no fim do `index.html`, operando direto no DOM. O desenho se apoia em três decisões que explicam quase todo o resto do código:
+
+1. **Estado global em memória** — duas variáveis concentram tudo que foi importado.
+2. **Re-render total** — qualquer mudança (import, filtro, sincronização) redesenha as cinco páginas inteiras. Não há renderização incremental nem *diffing*.
+3. **O DOM é a fonte dos filtros** — o valor dos `<select>` é lido no momento de renderizar, em vez de ser espelhado em variáveis de estado.
+
+### Ciclo de vida
+
+```
+DOMContentLoaded
+      │
+      ├─ setupLogin()        valida sessão do localStorage; mostra ou esconde o overlay de login
+      ├─ setupNavigation()   liga os botões da sidebar → navigateTo(page)
+      ├─ setupMobileNav()    hambúrguer e overlay no mobile
+      ├─ setupUploads()      gera a grade de dropzones a partir de ORIGINADORES
+      ├─ setupFilters()      liga cada <select> ao render da sua página
+      ├─ setupExports()      liga os botões de exportação
+      ├─ setupClear()        liga o botão "Limpar dados"
+      ├─ loadFromStorage()   localStorage (síncrono) → Supabase (background)
+      └─ renderAll()         primeira pintura de todas as páginas
+```
+
+As funções `setup*` rodam **uma única vez** e apenas registram listeners. Toda a lógica visível depois disso passa por `renderAll()`.
+
+### Estado global
+
+| Variável | Conteúdo |
+|---|---|
+| `extratosPorOriginador` | `{ [originador]: { convCol, dataCol, headers, rows, importadoEm } \| null }` |
+| `retornoData` | `{ rows: [{ convenio, competencia, valor }], importadoEm }` ou `null` |
+| `chartCreditoDebito`, `chartEvolucao`, … | Instâncias do Chart.js, guardadas para poder destruí-las antes de recriar |
+
+Os acessos ao extrato passam por quatro funções auxiliares em vez de tocar o objeto direto — `getExtratoRows(originador?)` (concatena as linhas de um ou de todos), `hasAnyExtrato()`, `countExtratoLancamentos()` e `latestExtratoImportadoEm()`. É o que permite a lista `ORIGINADORES` crescer ou encolher sem mexer no resto do código.
+
+### Do arquivo à tela
+
+```
+handleExtratoFile(file, originador)          handleRetornoFile(file)
+  file.arrayBuffer()                           file.arrayBuffer()
+  XLSX.read(cellDates: true)                   TextDecoder('windows-1252')
+  sheet_to_json()                              Papa.parse(delimiter: ';', header: true)
+  detecta colunas por heurística               mapeia 3 colunas fixas
+  normaliza cada linha                         parseNumeroBR no valor
+  snapshot dos totais anteriores               │
+  │                                            │
+  └──────────────┬─────────────────────────────┘
+                 ▼
+     extratosPorOriginador / retornoData   (memória)
+                 ▼
+     localStorage.setItem(...)             (síncrono, imediato)
+                 ▼
+     sbSave(...)                           (assíncrono, não bloqueia — toast em caso de erro)
+                 ▼
+     renderAll()
+```
+
+O `sbSave` é deliberadamente *fire-and-forget*: a interface não espera a rede. Se a gravação remota falhar, o dado continua salvo localmente e um toast informa o erro.
+
+### Modelo de dados normalizado
+
+Cada linha do extrato vira este objeto — é a estrutura que todas as telas consomem:
+
+```js
+{
+  conv:       "PREFEITURA MUNICIPAL X",  // valor da coluna de convênio
+  data:       "2026-05-14T00:00:00.000Z", // ISO, ou null se a data for inválida
+  mesAno:     "05/2026",                  // derivado da data, chave de agregação
+  valorD:     0,                          // valor se natureza === "D", senão 0
+  valorC:     1520.30,                    // valor se natureza === "C", senão 0
+  originador: "Vem Benefícios",
+  raw:        { /* linha original completa da planilha */ }
+}
+```
+
+Duas decisões importantes aqui:
+
+- **Crédito e débito viram colunas, não um campo `natureza`.** Isso transforma toda agregação em soma simples (`reduce`), sem condicionais espalhadas pelo código.
+- **`raw` preserva a linha original.** É o que permite a aba "Extrato" da exportação de conciliação devolver os lançamentos exatamente como vieram da planilha.
+
+### O ciclo de renderização
+
+```js
+function renderAll() {
+  safeRender(renderHome);
+  safeRender(renderRanking);
+  safeRender(renderEvolucao);
+  safeRender(renderRetorno);
+  safeRender(renderConciliacao);
+  safeRender(updateStatusPills);
+}
+```
+
+`safeRender` envolve cada chamada em `try/catch` com `console.error`: um erro numa página não impede as outras de pintar. Todas as funções `render*` seguem o mesmo roteiro:
+
+1. Limpar o `<tbody>` (`innerHTML = ""`)
+2. Repovoar os `<select>` de filtro com `fillSelect`, que **preserva a opção escolhida** se ela ainda existir nos dados novos
+3. Ler os filtros direto do DOM
+4. Filtrar e agregar as linhas com um `Map` chaveado por convênio ou por `convênio__mês`
+5. Montar as `<tr>` e, quando não há dados, esconder a tabela e exibir o `.empty-state`
+
+Como o estado dos filtros vive no DOM, `renderAll()` pode ser chamado de qualquer lugar — inclusive pela sincronização do Supabase chegando em segundo plano — sem que a seleção do usuário se perca.
+
+### Gráficos
+
+Todo gráfico segue o mesmo protocolo: destruir a instância anterior, checar se o Chart.js carregou, checar se há dados, e só então criar. Sem o `destroy()`, o Chart.js empilha instâncias sobre o mesmo `<canvas>` e os *tooltips* passam a responder duas vezes.
+
+Há um plugin próprio registrado uma única vez, o **`centerText`**, que desenha valor e rótulo no vazio central dos gráficos de rosca — usado para o saldo no donut de Crédito × Débito e para a taxa percentual nos donuts de status.
+
+Os dois donuts de status (Visão Geral e Conciliação) compartilham a mesma função `renderStatusDonut(canvasId, emptyId, dados, chartExistente)`, que devolve a nova instância para ser guardada na variável correspondente.
+
+### Mapa do arquivo
+
+| Bloco | Funções principais | Responsabilidade |
+|---|---|---|
+| Supabase | `sbSave`, `sbLoad`, `sbDelete` | Leitura e escrita na tabela `app_state` |
+| Helpers | `moeda`, `moedaCompacta`, `parseNumeroBR`, `normalizeNome`, `competenciaParaMesAno`, `mesAnoProximoMes`, `fillSelect` | Formatação e conversão — **funções puras** |
+| Navigation | `navigateTo`, `setupMobileNav` | Troca de `.page` ativa e menu mobile |
+| Toasts & Loading | `showToast`, `showLoading`, `hideLoading` | Feedback visual |
+| Import | `handleExtratoFile`, `handleRetornoFile` | Parsing e normalização dos arquivos |
+| Render | `renderHome`, `renderRanking`, `renderEvolucao`, `renderRetorno`, `renderConciliacao` | Uma função por página |
+| Charts | `renderChart*`, `renderStatusDonut` | Instanciação e destruição dos gráficos |
+| Conciliação | `computeConciliacao`, `filtrarConciliacao`, `updateConciliacaoSummary` | Cruzamento Retorno × Extrato — ver [Regra de conciliação](#regra-de-conciliação) |
+| Setup | `setupUploads`, `setupDropzone`, `setupFilters`, `setupClear`, `updateStatusPills` | Registro de listeners, executado uma vez |
+| Export | `exportTableToExcel`, `exportConciliacaoExcel` | Geração dos `.xlsx` |
+| Auth | `getSession`, `setupLogin`, `applyRolePermissions` | Login, sessão e perfil `viewer` |
+
+### Convenções e armadilhas ao mexer
+
+- **`computeConciliacao()` é recalculada do zero a cada render**, inclusive dentro de `renderHome`. É uma função pura sobre o estado global — barata o bastante nesse volume, mas é o primeiro lugar a otimizar se a base crescer.
+- **A grade de importação é gerada por JS**, não existe no HTML. Os `id` dos elementos são derivados de `slugOriginador(nome)` (sem acento, espaços viram hífen). Ao adicionar um originador, basta incluí-lo em `ORIGINADORES`.
+- **Linhas de tabela são montadas com `innerHTML` e template literals**, interpolando valores vindos das planilhas sem escape. Ao editar qualquer `render*`, tenha em mente que conteúdo da planilha é interpretado como HTML — ver [Limitações conhecidas](#limitações-conhecidas).
+- **Só o originador em `ORIGINADOR_RETORNO` entra na conciliação.** As demais telas somam todos os originadores importados; confundir os dois escopos é o erro mais fácil de cometer aqui.
+- **Alterou o `app.js`?** Atualize o `?v=` no `<script>` do `index.html`, senão o navegador serve a versão em cache.
 
 ## Como executar
 

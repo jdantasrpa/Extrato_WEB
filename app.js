@@ -185,6 +185,39 @@ function competenciaParaMesAno(competencia) {
   return `${String(mes).padStart(2, "0")}/${ano}`;
 }
 
+// A data de movimentação chega como célula de data (Date) ou como texto —
+// ISO ("2026-04-16") ou brasileiro ("10/08/2026 00:00:00"). O `new Date(texto)`
+// lê DD/MM como MM/DD: "10/08/2026" viraria outubro e "21/07/2026" viraria
+// Invalid Date, sumindo da conciliação. Por isso o formato BR é lido por
+// máscara explícita, nunca pelo parser do motor.
+const PADRAO_DATA_BR = /^(\d{1,2})\/(\d{1,2})\/(\d{4})/;
+
+// O extrato do Arbi usa 31/12/1899 como marcador de dia sem movimentação.
+// Nenhum lançamento real é anterior a este ano.
+const ANO_MINIMO_MOVIMENTO = 2000;
+
+function parsearDataMovimento(valor) {
+  if (valor instanceof Date) {
+    return isNaN(valor.getTime()) || valor.getFullYear() < ANO_MINIMO_MOVIMENTO ? null : valor;
+  }
+  if (valor === null || valor === undefined) return null;
+
+  const texto = String(valor).trim();
+  if (!texto) return null;
+
+  const partesBR = texto.match(PADRAO_DATA_BR);
+  const data = partesBR
+    ? new Date(Number(partesBR[3]), Number(partesBR[2]) - 1, Number(partesBR[1]))
+    : new Date(texto);
+
+  if (isNaN(data.getTime()) || data.getFullYear() < ANO_MINIMO_MOVIMENTO) return null;
+
+  // Rejeita data inexistente que o Date "corrige" por transbordo (31/02 -> 03/03).
+  if (partesBR && data.getDate() !== Number(partesBR[1])) return null;
+
+  return data;
+}
+
 function moeda(v) {
   const n = Number(v) || 0;
   return "R$ " + n.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -332,10 +365,9 @@ async function handleExtratoFile(file, originador) {
     const naturezaCol = headers.find((h) => h.toLowerCase().includes("natureza"));
 
     const rows = json.map((r) => {
-      let data = r[dataCol];
-      if (!(data instanceof Date)) data = new Date(data);
+      const data = parsearDataMovimento(r[dataCol]);
 
-      const valido = !isNaN(data.getTime());
+      const valido = data !== null;
       const valor = parseNumeroBR(r[valorCol]);
       const natureza = String(r[naturezaCol] || "").trim().toUpperCase();
 
@@ -382,6 +414,21 @@ async function handleExtratoFile(file, originador) {
 
     renderAll();
     showToast(`Extrato (${originador}) importado: ${rows.length} lançamentos.`, "success");
+
+    // Linha sem data não entra na conciliação (agrupada por mês/ano). O
+    // descarte precisa ser visível — silenciá-lo já mascarou 427 lançamentos.
+    const semData = rows.filter((r) => !r.mesAno);
+    if (semData.length) {
+      console.warn(`Extrato (${originador}): ${semData.length} linha(s) sem data de movimentação válida.`, {
+        coluna: dataCol,
+        exemplos: semData.slice(0, 5).map((r) => r.raw[dataCol]),
+      });
+      showToast(
+        `${semData.length} lançamento(s) sem data válida em "${dataCol}" ficaram fora da conciliação. Detalhes no console (F12).`,
+        "error",
+        9000
+      );
+    }
   } catch (err) {
     console.error("Erro ao importar extrato:", err);
     showToast("Erro ao importar o extrato. Verifique o arquivo.", "error");

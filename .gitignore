@@ -1,0 +1,10 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Credenciais (use config.ini.exemplo como modelo)
+config.ini
+
+# Dados volumosos / extrações
+*.csv

@@ -1,0 +1,140 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="900" viewBox="0 0 1000 900" font-family="'Segoe UI', 'Inter', Arial, sans-serif">
+  <defs>
+    <marker id="inc" markerWidth="12" markerHeight="12" refX="9" refY="5" orient="auto">
+      <path d="M0,0 L9,5 L0,10" fill="none" stroke="#94A3B8" stroke-width="1.5"/>
+    </marker>
+    <marker id="data" markerWidth="12" markerHeight="12" refX="9" refY="5" orient="auto">
+      <path d="M0,1 L9,5 L0,9 Z" fill="#3B82F6"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1000" height="900" fill="#0F172A"/>
+  <text x="500" y="36" text-anchor="middle" fill="#E2E8F0" font-size="22" font-weight="700">Diagrama de Casos de Uso — Visão do Usuário</text>
+  <text x="500" y="58" text-anchor="middle" fill="#94A3B8" font-size="13.5">Confronto entre o Retorno do BPO e o Extrato bancário (linguagem de negócio)</text>
+
+  <!-- system boundary -->
+  <rect x="250" y="72" width="690" height="600" rx="14" fill="#111C31" stroke="#334155" stroke-width="1.5"/>
+  <text x="595" y="98" text-anchor="middle" fill="#CBD5E1" font-size="13.5" font-weight="600">Sistema: Extrato WEB — Conciliação</text>
+
+  <!-- ===== associations ===== -->
+  <g stroke="#64748B" stroke-width="1.6" fill="none">
+    <line x1="113" y1="120" x2="300" y2="140"/>   <!-- Banco -> A -->
+    <line x1="113" y1="272" x2="330" y2="168"/>   <!-- Operador -> A -->
+    <line x1="114" y1="286" x2="292" y2="290"/>   <!-- Operador -> B -->
+    <line x1="114" y1="296" x2="345" y2="512"/>   <!-- Operador -> G -->
+    <line x1="113" y1="424" x2="300" y2="306"/>   <!-- BPO -> B -->
+    <line x1="113" y1="584" x2="350" y2="548"/>   <!-- Visualizador -> G -->
+  </g>
+
+  <!-- ===== data-flow (the two sources feeding the confront) ===== -->
+  <g stroke="#3B82F6" stroke-width="1.8" stroke-dasharray="6 4" fill="none" marker-end="url(#data)">
+    <line x1="455" y1="180" x2="528" y2="346"/>   <!-- Extrato -> Conferir -->
+    <line x1="498" y1="312" x2="512" y2="356"/>   <!-- Retorno -> Conferir -->
+  </g>
+  <text x="522" y="250" fill="#60A5FA" font-size="11" font-style="italic">fornece dados</text>
+  <text x="430" y="345" fill="#60A5FA" font-size="11" font-style="italic">fornece dados</text>
+
+  <!-- ===== include / extend ===== -->
+  <g stroke="#94A3B8" stroke-width="1.4" stroke-dasharray="7 5" fill="none" marker-end="url(#inc)">
+    <line x1="690" y1="352" x2="740" y2="312"/>   <!-- C -> D -->
+    <line x1="716" y1="388" x2="724" y2="390"/>   <!-- C -> E -->
+    <line x1="690" y1="430" x2="740" y2="476"/>   <!-- C -> F -->
+    <line x1="500" y1="492" x2="552" y2="440"/>   <!-- G -> C -->
+    <line x1="636" y1="560" x2="548" y2="566"/>   <!-- H -> G (extend) -->
+  </g>
+  <g fill="#94A3B8" font-size="11" font-style="italic">
+    <text x="700" y="322">«include»</text>
+    <text x="695" y="452">«include»</text>
+    <text x="470" y="452">«include»</text>
+    <text x="628" y="382">«include»</text>
+    <text x="560" y="588">«extend»</text>
+  </g>
+
+  <!-- ===== use cases ===== -->
+  <!-- A -->
+  <ellipse cx="405" cy="150" rx="112" ry="40" fill="#132A45" stroke="#3B82F6" stroke-width="1.6"/>
+  <text x="405" y="146" text-anchor="middle" fill="#E2E8F0" font-size="13" font-weight="600">Importar Extrato</text>
+  <text x="405" y="164" text-anchor="middle" fill="#CBD5E1" font-size="12">bancário</text>
+
+  <!-- B -->
+  <ellipse cx="405" cy="290" rx="115" ry="40" fill="#132A45" stroke="#3B82F6" stroke-width="1.6"/>
+  <text x="405" y="286" text-anchor="middle" fill="#E2E8F0" font-size="13" font-weight="600">Importar Retorno</text>
+  <text x="405" y="304" text-anchor="middle" fill="#CBD5E1" font-size="12">do BPO</text>
+
+  <!-- C central -->
+  <ellipse cx="590" cy="390" rx="128" ry="56" fill="#0E3A34" stroke="#2DD4BF" stroke-width="2.4"/>
+  <text x="590" y="384" text-anchor="middle" fill="#F0FDFA" font-size="15.5" font-weight="700">Conferir</text>
+  <text x="590" y="406" text-anchor="middle" fill="#99F6E4" font-size="13.5" font-weight="600">Extrato × Retorno</text>
+
+  <!-- D -->
+  <ellipse cx="815" cy="275" rx="108" ry="40" fill="#1E293B" stroke="#64748B" stroke-width="1.5"/>
+  <text x="815" y="271" text-anchor="middle" fill="#E2E8F0" font-size="12.5">Casar por convênio</text>
+  <text x="815" y="289" text-anchor="middle" fill="#CBD5E1" font-size="12">e mês</text>
+
+  <!-- E -->
+  <ellipse cx="820" cy="390" rx="110" ry="40" fill="#1E293B" stroke="#64748B" stroke-width="1.5"/>
+  <text x="820" y="386" text-anchor="middle" fill="#E2E8F0" font-size="12.5">Aplicar defasagem</text>
+  <text x="820" y="404" text-anchor="middle" fill="#CBD5E1" font-size="12">de 1 mês</text>
+
+  <!-- F -->
+  <ellipse cx="815" cy="505" rx="108" ry="40" fill="#1E293B" stroke="#64748B" stroke-width="1.5"/>
+  <text x="815" y="501" text-anchor="middle" fill="#E2E8F0" font-size="12.5">Classificar</text>
+  <text x="815" y="519" text-anchor="middle" fill="#CBD5E1" font-size="12">resultado</text>
+
+  <!-- G -->
+  <ellipse cx="445" cy="530" rx="118" ry="42" fill="#132A45" stroke="#3B82F6" stroke-width="1.6"/>
+  <text x="445" y="526" text-anchor="middle" fill="#E2E8F0" font-size="13" font-weight="600">Consultar</text>
+  <text x="445" y="544" text-anchor="middle" fill="#CBD5E1" font-size="12">conciliação</text>
+
+  <!-- H -->
+  <ellipse cx="690" cy="595" rx="112" ry="40" fill="#132A45" stroke="#3B82F6" stroke-width="1.6"/>
+  <text x="690" y="591" text-anchor="middle" fill="#E2E8F0" font-size="13" font-weight="600">Exportar resultado</text>
+  <text x="690" y="609" text-anchor="middle" fill="#CBD5E1" font-size="12">(Excel)</text>
+
+  <!-- ===== actors ===== -->
+  <!-- Banco -->
+  <g transform="translate(95,120)" stroke="#93C5FD" stroke-width="2" fill="none">
+    <circle cx="0" cy="0" r="13"/><line x1="0" y1="13" x2="0" y2="44"/>
+    <line x1="-17" y1="24" x2="17" y2="24"/><line x1="0" y1="44" x2="-14" y2="66"/><line x1="0" y1="44" x2="14" y2="66"/>
+  </g>
+  <text x="95" y="206" text-anchor="middle" fill="#CBD5E1" font-size="13" font-weight="600">Banco</text>
+  <text x="95" y="222" text-anchor="middle" fill="#94A3B8" font-size="11">(fonte do Extrato)</text>
+
+  <!-- Operador -->
+  <g transform="translate(95,280)" stroke="#93C5FD" stroke-width="2" fill="none">
+    <circle cx="0" cy="0" r="13"/><line x1="0" y1="13" x2="0" y2="44"/>
+    <line x1="-17" y1="24" x2="17" y2="24"/><line x1="0" y1="44" x2="-14" y2="66"/><line x1="0" y1="44" x2="14" y2="66"/>
+  </g>
+  <text x="95" y="366" text-anchor="middle" fill="#CBD5E1" font-size="13" font-weight="600">Operador</text>
+  <text x="95" y="382" text-anchor="middle" fill="#94A3B8" font-size="11">(perfil Master)</text>
+
+  <!-- BPO -->
+  <g transform="translate(95,430)" stroke="#93C5FD" stroke-width="2" fill="none">
+    <circle cx="0" cy="0" r="13"/><line x1="0" y1="13" x2="0" y2="44"/>
+    <line x1="-17" y1="24" x2="17" y2="24"/><line x1="0" y1="44" x2="-14" y2="66"/><line x1="0" y1="44" x2="14" y2="66"/>
+  </g>
+  <text x="95" y="516" text-anchor="middle" fill="#CBD5E1" font-size="13" font-weight="600">BPO</text>
+  <text x="95" y="532" text-anchor="middle" fill="#94A3B8" font-size="11">(fonte do Retorno)</text>
+
+  <!-- Visualizador -->
+  <g transform="translate(95,590)" stroke="#93C5FD" stroke-width="2" fill="none">
+    <circle cx="0" cy="0" r="13"/><line x1="0" y1="13" x2="0" y2="44"/>
+    <line x1="-17" y1="24" x2="17" y2="24"/><line x1="0" y1="44" x2="-14" y2="66"/><line x1="0" y1="44" x2="14" y2="66"/>
+  </g>
+  <text x="95" y="676" text-anchor="middle" fill="#CBD5E1" font-size="13" font-weight="600">Visualizador</text>
+  <text x="95" y="692" text-anchor="middle" fill="#94A3B8" font-size="11">(perfil AlvoCard)</text>
+
+  <!-- ===== legend: outcomes ===== -->
+  <rect x="40" y="704" width="920" height="172" rx="12" fill="#111C31" stroke="#334155" stroke-width="1.5"/>
+  <text x="60" y="732" fill="#2DD4BF" font-size="14" font-weight="700">Resultados possíveis do confronto (por convênio e mês)</text>
+  <g font-size="12.5">
+    <text x="60" y="760"><tspan fill="#34D399" font-weight="700">✅ Conciliado</tspan><tspan fill="#CBD5E1"> — valores batem (diferença menor que 1 centavo)</tspan></text>
+    <text x="60" y="786"><tspan fill="#6EE7B7" font-weight="700">✅ Conciliado a maior</tspan><tspan fill="#CBD5E1"> — extrato acima, dentro de 5%</tspan></text>
+    <text x="60" y="812"><tspan fill="#5EEAD4" font-weight="700">✅ Conciliado a menor</tspan><tspan fill="#CBD5E1"> — extrato abaixo, dentro de 5%</tspan></text>
+    <text x="520" y="760"><tspan fill="#F87171" font-weight="700">❌ Divergente</tspan><tspan fill="#CBD5E1"> — diferença acima de 5%</tspan></text>
+    <text x="520" y="786"><tspan fill="#FBBF24" font-weight="700">⚠️ Sem Extrato</tspan><tspan fill="#CBD5E1"> — BPO informou, não há no extrato</tspan></text>
+    <text x="520" y="812"><tspan fill="#FBBF24" font-weight="700">⚠️ Sem Retorno</tspan><tspan fill="#CBD5E1"> — há no extrato, BPO não informou</tspan></text>
+  </g>
+  <text x="60" y="850" fill="#94A3B8" font-size="11.5">Defasagem de 1 mês: a competência do BPO (ex.: abr/26) é conferida com o mês seguinte no extrato (maio/2026).</text>
+  <text x="60" y="868" fill="#64748B" font-size="11">Hoje o confronto usa apenas o originador “Vem Benefícios”, única origem cruzada com o BPO.</text>
+</svg>

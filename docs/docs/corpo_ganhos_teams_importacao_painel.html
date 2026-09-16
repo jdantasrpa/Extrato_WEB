@@ -1,0 +1,186 @@
+<div style="font-family: Calibri, Arial, sans-serif; font-size: 11pt; color: #202020;">
+
+<p>Bom dia!</p>
+
+<p>Coloquei em produção duas etapas do processo do extrato bancário: a
+publicação automática dos arquivos do dia no grupo do Teams e a importação
+automática desses mesmos arquivos no painel Extrato_WEB. Segue o resumo do
+que elas entregam, o desempenho medido em produção e os controles
+implantados.</p>
+
+<hr>
+
+<p>
+<b>ALVOCARD – Gestão das Operações [Consignado]</b><br>
+<b>Automação – Extrato Bancário: publicação no Teams e importação no painel</b><br>
+O dado do dia chega ao time e ao painel sem intervenção manual, sempre na
+mesma versão e com registro de cada etapa.<br>
+Referência 08/2026
+</p>
+
+<hr>
+
+<h3>O que a automação faz</h3>
+
+<p>Todo dia útil, a automação verifica se os insumos obrigatórios do dia
+existem em disco: o e-mail do Banco Arbi da data (prova de que o extrato é
+fresco), o consolidado do extrato bancário da VEM BENEFÍCIOS e o arquivo de
+retorno do BPO mais recente. Faltando qualquer um deles, a execução é
+abortada e registrada como crítica — nada é publicado nem importado. Com
+todos presentes, ela publica os dois arquivos no chat de grupo
+"Extrato bancario" do Teams (upload via Microsoft Graph, com liberação de
+acesso para a organização, para que qualquer membro abra o anexo) e, em
+seguida, abre o painel Extrato_WEB, autentica, envia os dois arquivos na aba
+"Importar Dados" e só encerra depois de confirmar a sincronização de cada um
+com o servidor. Os arquivos permanecem nas pastas de origem — nada é movido
+ou renomeado.</p>
+
+<h3>Volume e desempenho medidos</h3>
+
+<p>Números extraídos do log da própria automação, período de 04/08/2026 a
+19/08/2026:</p>
+
+<table border="1" cellpadding="6" cellspacing="0" style="border-collapse: collapse; font-size: 10.5pt;">
+<tr style="background-color: #f2f2f2;">
+  <th align="left">Indicador</th>
+  <th align="left">Medido</th>
+</tr>
+<tr><td>Dias úteis com importação concluída</td><td>12</td></tr>
+<tr><td>Ciclos de importação concluídos</td><td>18</td></tr>
+<tr><td>Execuções abortadas pelo gate (e-mail do Arbi ainda não chegou)</td><td>24</td></tr>
+<tr><td>Publicações no grupo do Teams (desde a entrada em produção)</td><td>4</td></tr>
+<tr><td>Arquivos entregues por dia (Teams + painel)</td><td>2 + 2</td></tr>
+<tr><td>Tempo da publicação no Teams (2 arquivos)</td><td>10 a 11 s</td></tr>
+<tr><td>Ciclo completo: publicação + login + 2 uploads + confirmação de sincronização</td><td>73 s</td></tr>
+<tr><td>Lançamentos no consolidado publicado</td><td>3.776 (839 em ago/2026)</td></tr>
+<tr><td>Falhas de importação no período</td><td>0</td></tr>
+</table>
+
+<p>As 24 execuções abortadas não são falha: são o gate funcionando. O e-mail
+do Banco Arbi chega em janela variável (≈10h–15h) e, até ele chegar, a
+automação se recusa a publicar e a importar dado defasado.</p>
+
+<h3>Ganho de tempo operacional (estimativa)</h3>
+
+<p>Este processo não era executado manualmente antes — a publicação no grupo
+e a importação no painel nasceram já automatizadas. A tabela abaixo estima,
+portanto, o esforço que uma pessoa teria hoje para entregar o mesmo
+resultado, todo dia útil:</p>
+
+<table border="1" cellpadding="6" cellspacing="0" style="border-collapse: collapse; font-size: 10.5pt;">
+<tr style="background-color: #f2f2f2;">
+  <th align="left">Etapa do processo manual equivalente</th>
+  <th align="left">min/dia</th>
+</tr>
+<tr><td>Verificar se o e-mail do Arbi do dia já chegou (média de 3 checagens ao longo do dia)</td><td>4,5</td></tr>
+<tr><td>Localizar o consolidado atualizado e o retorno do BPO mais recente</td><td>2,0</td></tr>
+<tr><td>Abrir o Teams, localizar o grupo, anexar os 2 arquivos e escrever a mensagem</td><td>3,0</td></tr>
+<tr><td>Abrir o painel e autenticar</td><td>1,0</td></tr>
+<tr><td>Subir o extrato bancário e conferir a sincronização</td><td>2,0</td></tr>
+<tr><td>Subir o retorno do BPO e conferir a sincronização</td><td>1,5</td></tr>
+<tr><td>Conferir se o dado apareceu no painel e registrar a execução</td><td>2,0</td></tr>
+<tr style="background-color: #f2f2f2;"><td><b>TOTAL MANUAL</b></td><td><b>16,0 min/dia</b></td></tr>
+</table>
+
+<p>O número de checagens diárias não é chute: a automação executou 48 vezes
+para entregar 12 dias de importação, ou seja, em média 4 tentativas por dia
+até o e-mail do Arbi chegar. Manualmente, cada uma dessas tentativas seria
+uma ida da pessoa à caixa de entrada.</p>
+
+<h3>Comparação mensal (21 dias úteis)</h3>
+
+<table border="1" cellpadding="6" cellspacing="0" style="border-collapse: collapse; font-size: 10.5pt;">
+<tr style="background-color: #f2f2f2;">
+  <th align="left">&nbsp;</th>
+  <th align="left">Manual (estimado)</th>
+  <th align="left">Automatizado</th>
+</tr>
+<tr><td>Processamento</td><td>5,6 h</td><td>0,4 h</td></tr>
+<tr><td>Supervisão humana</td><td>—</td><td>0,7 h</td></tr>
+<tr style="background-color: #f2f2f2;"><td><b>Total</b></td><td><b>5,6 h</b></td><td><b>1,1 h</b></td></tr>
+</table>
+
+<p>Economia estimada de <b>4,5 h/mês</b>, o equivalente a <b>54 h/ano</b> —
+cerca de 3% de um FTE. Em cenário conservador, com tempos unitários 40%
+menores do que os estimados acima, a economia ainda seria de
+<b>2,3 h/mês</b>.</p>
+
+<p>O ganho principal, porém, não é o volume de horas: é a confiabilidade do
+horário. O dado chega ao grupo e ao painel minutos depois de o extrato do
+Arbi entrar na caixa, todo dia, sem depender de alguém estar disponível
+naquele momento.</p>
+
+<h3>Ganhos de qualidade e padronização</h3>
+
+<p><b>Dado único para todo o time.</b> Todos os membros do grupo recebem o
+mesmo arquivo, na mesma versão, no mesmo momento. Acaba o repasse por print,
+cópia solta ou "me manda o extrato de ontem": o arquivo publicado é
+exatamente o mesmo que foi importado no painel, sem intermediário que possa
+enviar uma versão desatualizada. O arquivo sobe nomeado com a data de
+referência, então o histórico do grupo fica auto-explicativo.</p>
+
+<p><b>Rastreabilidade completa.</b> Cada etapa é registrada com carimbo de
+hora — quais insumos foram encontrados, qual arquivo foi publicado, em qual
+chat, qual arquivo foi enviado ao painel e em que momento o servidor
+confirmou a sincronização. Se alguém questionar o dado de um dia específico,
+o log responde exatamente o que foi entregue, quando e a partir de qual
+arquivo.</p>
+
+<h3>Mitigação de risco</h3>
+
+<ul>
+  <li><b>Trava contra dado defasado:</b> sem o e-mail do Arbi da data, a
+      execução é abortada e registrada como crítica — nada é publicado nem
+      importado (24 ocorrências no período, todas corretas).</li>
+  <li><b>Sem duplicidade:</b> checkpoint por data impede republicar no grupo
+      e reimportar no painel no mesmo dia, evitando descasamento de
+      informação para a conciliação.</li>
+  <li><b>Confirmação de gravação:</b> a automação só encerra o navegador
+      depois de o painel confirmar a sincronização de cada arquivo com o
+      servidor; sem confirmação, a execução falha em vez de dar falso
+      positivo.</li>
+  <li><b>Falha na notificação não bloqueia o dado:</b> se o Teams estiver
+      indisponível, o erro é registrado e a importação no painel segue
+      normalmente.</li>
+  <li><b>Credenciais fora do código:</b> senha do painel em arquivo de
+      configuração local não versionado, e acesso ao Teams por token
+      individual da conta do robô, sem senha compartilhada.</li>
+  <li><b>Acesso controlado ao anexo:</b> o arquivo publicado é liberado para
+      leitura dentro da organização, não por link público.</li>
+</ul>
+
+<p><b>Plano B.</b> A automação não substitui o conhecimento do processo. A
+equipe deve continuar sabendo executar as etapas manualmente — localizar os
+arquivos do dia, publicar no grupo e importar no painel pela aba "Importar
+Dados" — e essa capacidade precisa ser mantida viva independentemente de a
+automação estar funcionando bem. Em qualquer indisponibilidade (rede,
+Teams, painel, mudança de layout do site ou expiração do token), a operação
+segue pela via manual sem parada, e a automação volta a assumir quando o
+ambiente normalizar.</p>
+
+<h3>Qualidade e continuidade</h3>
+
+<p>A solução tem <b>136 testes automatizados</b> cobrindo as regras de
+validação dos insumos, a montagem das mensagens e anexos, os checkpoints de
+idempotência e o comportamento diante de falha na publicação. O disparo e o
+acompanhamento das execuções são feitos pelo painel de execuções, e cada
+rodada deixa log próprio com o resultado de cada etapa.</p>
+
+<h3>Base dos números</h3>
+
+<p>Foram <b>medidos pela própria automação</b>, e extraídos do log de
+produção do período de 04/08/2026 a 19/08/2026: os 12 dias úteis com
+importação concluída, os 18 ciclos concluídos, as 24 execuções abortadas
+pelo gate, as 4 publicações no grupo do Teams, os tempos de execução (10–11 s
+para a publicação no Teams e 73 s para o ciclo completo) e o volume do
+consolidado publicado (3.776 lançamentos, 839 deles em agosto/2026). A
+quantidade de testes automatizados também é real.</p>
+
+<p>São <b>estimativas</b>: todos os tempos da tabela do processo manual e,
+por consequência, a economia de 4,5 h/mês, as 54 h/ano e o percentual de
+FTE. Este processo não existia manualmente antes da automação — os tempos
+representam o esforço que seria necessário hoje para entregar o mesmo
+resultado, não uma medição de rotina anterior. A projeção mensal considera
+21 dias úteis.</p>
+
+</div>

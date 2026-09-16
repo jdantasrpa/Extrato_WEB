@@ -1,0 +1,121 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1240" height="860" viewBox="0 0 1240 860" font-family="'Segoe UI', 'Inter', Arial, sans-serif">
+  <defs>
+    <marker id="a2" markerWidth="12" markerHeight="12" refX="9" refY="5" orient="auto">
+      <path d="M0,1 L9,5 L0,9 Z" fill="#60A5FA"/>
+    </marker>
+    <style>
+      .mono { font-family: 'JetBrains Mono', 'Consolas', monospace; }
+    </style>
+  </defs>
+
+  <rect x="0" y="0" width="1240" height="860" fill="#0F172A"/>
+  <text x="620" y="38" text-anchor="middle" fill="#E2E8F0" font-size="23" font-weight="700">Visão do Desenvolvedor — Pipeline da conciliação (app.js)</text>
+  <text x="620" y="62" text-anchor="middle" fill="#94A3B8" font-size="13.5">Import → normalização → computeConciliacao() (Map por convênio__mês) → classificação → render/export</text>
+
+  <!-- flow arrows -->
+  <g stroke="#3B82F6" stroke-width="2.2" fill="none" marker-end="url(#a2)">
+    <line x1="300" y1="170" x2="360" y2="235"/>   <!-- extrato -> compute -->
+    <line x1="300" y1="400" x2="360" y2="335"/>   <!-- retorno -> compute -->
+    <line x1="700" y1="285" x2="760" y2="285"/>   <!-- compute -> classify -->
+    <line x1="960" y1="360" x2="960" y2="560"/>   <!-- classify -> render -->
+  </g>
+
+  <!-- ============ INPUT 1: handleExtratoFile ============ -->
+  <rect x="30" y="100" width="270" height="150" rx="10" fill="#132A45" stroke="#3B82F6" stroke-width="1.6"/>
+  <text x="46" y="126" fill="#93C5FD" font-size="13" font-weight="700" class="mono">handleExtratoFile(file, orig)</text>
+  <text x="46" y="148" fill="#94A3B8" font-size="11.5">XLSX.read · sheet_to_json · heurística de colunas</text>
+  <text x="46" y="172" fill="#CBD5E1" font-size="11.5" class="mono">extratosPorOriginador[o].rows:</text>
+  <text x="46" y="192" fill="#E2E8F0" font-size="11" class="mono">{ conv, mesAno "MM/AAAA",</text>
+  <text x="46" y="208" fill="#E2E8F0" font-size="11" class="mono">  valorC (nat."C"), valorD,</text>
+  <text x="46" y="224" fill="#E2E8F0" font-size="11" class="mono">  originador, raw }</text>
+  <text x="46" y="242" fill="#64748B" font-size="10.5">só ORIGINADOR_RETORNO entra na conciliação</text>
+
+  <!-- ============ INPUT 2: handleRetornoFile ============ -->
+  <rect x="30" y="330" width="270" height="150" rx="10" fill="#132A45" stroke="#3B82F6" stroke-width="1.6"/>
+  <text x="46" y="356" fill="#93C5FD" font-size="13" font-weight="700" class="mono">handleRetornoFile(file)</text>
+  <text x="46" y="378" fill="#94A3B8" font-size="11.5">TextDecoder win-1252 · Papa.parse(';')</text>
+  <text x="46" y="402" fill="#CBD5E1" font-size="11.5" class="mono">retornoData.rows:</text>
+  <text x="46" y="422" fill="#E2E8F0" font-size="11" class="mono">{ convenio,</text>
+  <text x="46" y="438" fill="#E2E8F0" font-size="11" class="mono">  competencia "abr/26" | "4/26",</text>
+  <text x="46" y="454" fill="#E2E8F0" font-size="11" class="mono">  valor (total_valor_descontado) }</text>
+  <text x="46" y="472" fill="#64748B" font-size="10.5">parseNumeroBR normaliza o valor</text>
+
+  <!-- ============ CORE: computeConciliacao ============ -->
+  <rect x="360" y="130" width="340" height="310" rx="12" fill="#0E3A34" stroke="#2DD4BF" stroke-width="2.4"/>
+  <text x="530" y="158" text-anchor="middle" fill="#F0FDFA" font-size="15" font-weight="700" class="mono">computeConciliacao()</text>
+  <text x="530" y="178" text-anchor="middle" fill="#99F6E4" font-size="11.5">função pura sobre o estado global</text>
+
+  <rect x="378" y="192" width="304" height="96" rx="8" fill="#0B2B27" stroke="#134E4A" stroke-width="1.2"/>
+  <text x="392" y="212" fill="#5EEAD4" font-size="11.5" font-weight="700">Chave do Map (merge das 2 bases)</text>
+  <text x="392" y="232" fill="#E2E8F0" font-size="11" class="mono">key = `${normalizeNome(conv)}__${mesAno}`</text>
+  <text x="392" y="252" fill="#CBD5E1" font-size="10.8" class="mono">extrato: usa r.mesAno direto</text>
+  <text x="392" y="270" fill="#CBD5E1" font-size="10.8" class="mono">retorno: mesAnoProximoMes(</text>
+  <text x="392" y="284" fill="#CBD5E1" font-size="10.8" class="mono">           competenciaParaMesAno(competencia))  ← +1 mês</text>
+
+  <rect x="378" y="298" width="304" height="60" rx="8" fill="#0B2B27" stroke="#134E4A" stroke-width="1.2"/>
+  <text x="392" y="318" fill="#5EEAD4" font-size="11.5" font-weight="700">Agregação por chave</text>
+  <text x="392" y="338" fill="#E2E8F0" font-size="10.8" class="mono">valorExtrato += r.valorC   |   valorRetorno += r.valor</text>
+  <text x="392" y="352" fill="#CBD5E1" font-size="10.5" class="mono">também soma valorDebitoExtrato e qtdLancamentosExtrato</text>
+
+  <rect x="378" y="368" width="304" height="52" rx="8" fill="#0B2B27" stroke="#134E4A" stroke-width="1.2"/>
+  <text x="392" y="388" fill="#5EEAD4" font-size="11.5" font-weight="700">Diferença</text>
+  <text x="392" y="408" fill="#E2E8F0" font-size="11.5" class="mono">diferenca = valorExtrato − valorRetorno</text>
+
+  <!-- ============ CLASSIFY ============ -->
+  <rect x="760" y="120" width="360" height="330" rx="12" fill="#111C31" stroke="#334155" stroke-width="1.6"/>
+  <text x="940" y="146" text-anchor="middle" fill="#CBD5E1" font-size="14" font-weight="700">Classificação do status</text>
+  <text x="940" y="166" text-anchor="middle" fill="#64748B" font-size="11" class="mono">TOLERANCIA = 0.01  ·  faixa ±5%</text>
+
+  <g font-size="11.5" class="mono">
+    <rect x="776" y="180" width="328" height="34" rx="6" fill="#2A1414" stroke="#F59E0B" stroke-width="1.2"/>
+    <text x="788" y="201" fill="#FBBF24">convExtrato == null            → "sem-extrato"</text>
+
+    <rect x="776" y="220" width="328" height="34" rx="6" fill="#2A1414" stroke="#F59E0B" stroke-width="1.2"/>
+    <text x="788" y="241" fill="#FBBF24">convRetorno == null            → "sem-retorno"</text>
+
+    <rect x="776" y="260" width="328" height="34" rx="6" fill="#0E3A2E" stroke="#10B981" stroke-width="1.2"/>
+    <text x="788" y="281" fill="#34D399">|dif| &lt; TOLERANCIA            → "ok"</text>
+
+    <rect x="776" y="300" width="328" height="50" rx="6" fill="#0E3A2E" stroke="#34D399" stroke-width="1.2"/>
+    <text x="788" y="320" fill="#6EE7B7">|dif| &lt;= |valorRetorno|*0.05 :</text>
+    <text x="788" y="338" fill="#6EE7B7">  dif&gt;0 "conciliado-maior" / "conciliado-menor"</text>
+
+    <rect x="776" y="356" width="328" height="34" rx="6" fill="#3A1414" stroke="#EF4444" stroke-width="1.2"/>
+    <text x="788" y="377" fill="#F87171">senão                         → "divergente"</text>
+  </g>
+  <text x="940" y="414" text-anchor="middle" fill="#94A3B8" font-size="11">retorna [] ordenado por convênio, depois por mês</text>
+  <text x="940" y="432" text-anchor="middle" fill="#64748B" font-size="10.5" class="mono">mesAnoParaOrdenacao(mesAno) = ano*100 + mes</text>
+
+  <!-- ============ CONSUMERS ============ -->
+  <rect x="760" y="560" width="360" height="150" rx="12" fill="#132A45" stroke="#3B82F6" stroke-width="1.6"/>
+  <text x="940" y="586" text-anchor="middle" fill="#E2E8F0" font-size="14" font-weight="700">Consumidores do resultado</text>
+  <text x="778" y="612" fill="#CBD5E1" font-size="11.5" class="mono">renderConciliacao()  → tabela + filtrarConciliacao()</text>
+  <text x="778" y="632" fill="#CBD5E1" font-size="11.5" class="mono">updateConciliacaoSummary()  → contadores por status</text>
+  <text x="778" y="652" fill="#CBD5E1" font-size="11.5" class="mono">renderStatusDonut() / renderChartConciliacaoComparativo()</text>
+  <text x="778" y="672" fill="#CBD5E1" font-size="11.5" class="mono">renderHome()  → KPIs taxa de conciliação / pendências</text>
+  <text x="778" y="692" fill="#CBD5E1" font-size="11.5" class="mono">exportConciliacaoExcel()  → abas "Conciliação" + "Extrato" (raw)</text>
+
+  <!-- recompute note -->
+  <rect x="360" y="470" width="340" height="80" rx="10" fill="#1E293B" stroke="#64748B" stroke-width="1.4"/>
+  <text x="376" y="494" fill="#FBBF24" font-size="12" font-weight="700">⚠ Recalculado do zero a cada render</text>
+  <text x="376" y="514" fill="#CBD5E1" font-size="11.5">renderAll() chama computeConciliacao() em renderHome e</text>
+  <text x="376" y="532" fill="#CBD5E1" font-size="11.5">renderConciliacao — puro e barato hoje; 1º ponto a memoizar</text>
+
+  <!-- helpers strip -->
+  <rect x="30" y="560" width="710" height="150" rx="12" fill="#111C31" stroke="#334155" stroke-width="1.5"/>
+  <text x="50" y="586" fill="#2DD4BF" font-size="14" font-weight="700">Funções puras de apoio (Helpers)</text>
+  <g font-size="11.5" class="mono" fill="#CBD5E1">
+    <text x="50" y="612"><tspan fill="#93C5FD">normalizeNome(s)</tspan> — NFD, remove acentos, lowercase, colapsa espaços</text>
+    <text x="50" y="632"><tspan fill="#93C5FD">competenciaParaMesAno(c)</tspan> — "abr/26"|"4/26" → "04/2026" (MESES_PT, ano 2 díg.)</text>
+    <text x="50" y="652"><tspan fill="#93C5FD">mesAnoProximoMes(ma)</tspan> — "04/2026" → "05/2026" (defasagem de repasse)</text>
+    <text x="50" y="672"><tspan fill="#93C5FD">parseNumeroBR(v)</tspan> — "1.234,56" → 1234.56</text>
+    <text x="50" y="692" fill="#64748B">Candidatos naturais a testes unitários (pytest/jest) — regras isoladas e determinísticas.</text>
+  </g>
+
+  <!-- config badge -->
+  <rect x="30" y="736" width="1090" height="96" rx="10" fill="#111C31" stroke="#334155" stroke-width="1.5"/>
+  <text x="50" y="762" fill="#2DD4BF" font-size="13.5" font-weight="700">Configuração (topo do app.js)</text>
+  <text x="50" y="786" fill="#E2E8F0" font-size="12" class="mono">ORIGINADORES = ["Vem Benefícios"]   ·   ORIGINADOR_RETORNO = "Vem Benefícios"   ·   TOLERANCIA = 0.01</text>
+  <text x="50" y="808" fill="#94A3B8" font-size="11.5">A conciliação cruza SOMENTE extratosPorOriginador[ORIGINADOR_RETORNO] com retornoData. As demais telas somam todos os originadores.</text>
+  <text x="50" y="826" fill="#64748B" font-size="11">Persistência: localStorage (síncrono) + Supabase app_state (fire-and-forget, comparado por importadoEm).</text>
+</svg>

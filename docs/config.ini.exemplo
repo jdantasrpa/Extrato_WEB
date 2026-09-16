@@ -1,0 +1,17 @@
+; Copie este arquivo para "config.ini" e preencha a senha do perfil Master
+; do painel Extrato_WEB. NÃO versione o config.ini com a senha real.
+; Alternativa: definir as variáveis de ambiente ALVO_PAINEL_USUARIO e
+; ALVO_PAINEL_SENHA (têm prioridade sobre o arquivo).
+
+[PAINEL]
+usuario = Master
+senha = SUA_SENHA_AQUI
+
+; Publicação dos insumos no chat de grupo do Teams, feita ANTES da
+; importação no painel. "grupo" é o nome (topic) do chat — a comparação
+; ignora acentos e caixa. "ativo = nao" desliga a etapa sem mexer no
+; código. Variáveis de ambiente equivalentes (têm prioridade):
+; ALVO_TEAMS_GRUPO e ALVO_TEAMS_ATIVO.
+[TEAMS]
+grupo = Extrato bancario
+ativo = sim

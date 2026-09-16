@@ -1,0 +1,24 @@
+[tool.blue]
+line-length = 79
+# blue (fork antigo do black) suporta no máximo py310; py311 quebra o CLI.
+target-version = ["py310"]
+
+[tool.isort]
+profile = "black"
+line_length = 79
+known_first_party = [
+    "config",
+    "core",
+    "domain",
+    "services",
+    "repositories",
+    "database",
+    "integrations",
+    "rpa",
+    "workers",
+    "utils",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
